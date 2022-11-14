@@ -27,6 +27,9 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'subr-x))
+
 (require 'consult)
 
 (defcustom consult-git-log-grep-open-function #'consult-git-log-grep-show-commit
@@ -82,7 +85,6 @@
   "Build the command using INPUT and supply the highlight function."
   (pcase-let ((`(,arg . ,opts) (consult--command-split input)))
     (unless (string-blank-p arg)
-      ;; TODO: Make this more configurable
       (list :command (append (list
                               "git"
                               "--no-pager"
@@ -93,6 +95,19 @@
                               "--grep")
                              (list arg) opts)
             :highlight (cdr (consult--default-regexp-compiler input 'ignore-case t))))))
+
+(defun consult-git-log-grep-result-annotator (cand)
+  "Annotate the current candidate CAND using its text-properties."
+  (when-let (metadata (get-text-property 0 'consult-log-grep--metadata cand))
+    (let ((shortsha (truncate-string-to-width (cdr (assoc 'sha metadata)) 8))
+          (datetime (cdr (assoc 'datetime metadata)))
+          (author (cdr (assoc 'author metadata))))
+      (format "%s%s  %s  %s"
+              (make-string (- 76 (length cand)) (string-to-char " "))
+              (propertize shortsha 'face 'consult-git-log-grep-sha)
+              (propertize datetime 'face 'consult-git-log-grep-datetime)
+              (propertize author 'face 'consult-git-log-grep-author)))))
+
 
 ;;;###autoload
 (defun consult-git-log-grep (&optional initial)
@@ -109,22 +124,11 @@
                       :sort nil
                       :lookup #'consult--lookup-cdr
                       :category 'consult-git-log-grep-result
+                      :annotate 'consult-git-log-grep-result-annotator
                       :initial (consult--async-split-initial initial)
                       :add-history (consult--async-split-thingatpt 'symbol)
                       :history '(:input consult-git-log-grep--history))))
     (funcall consult-git-log-grep-open-function (car result))))
-
-(with-eval-after-load 'marginalia
-  (defun consult-git-log-grep-result-annotator (cand)
-    (when-let (metadata (get-text-property 0 'consult-log-grep--metadata cand))
-      (marginalia--fields
-       ;; don't use :truncate so no dots are displayed at the end of the sha
-       ((truncate-string-to-width (cdr (assoc 'sha metadata)) 8) :face 'consult-git-log-grep-sha)
-       ((cdr (assoc 'datetime metadata)) :face 'consult-git-log-grep-datetime)
-       ((cdr (assoc 'author metadata)) :face 'consult-git-log-grep-author))))
-
-  (add-to-list 'marginalia-annotator-registry
-               '(consult-git-log-grep-result consult-git-log-grep-result-annotator)))
 
 (provide 'consult-git-log-grep)
 ;;; consult-git-log-grep.el ends here
