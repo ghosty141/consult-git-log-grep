@@ -89,7 +89,9 @@
                               "git"
                               "--no-pager"
                               "log"
-                              "--pretty=format:%H@@@%s@@@%aN@@@%ad"
+                              ;; use git log's formattings padding/truncating for
+                              ;; better performance (less lisp string processing)
+                              "--pretty=format:%H@@@%<(76,mtrunc)%s@@@%aN@@@%ad"
                               "--date=format:%Y-%m-%d %H:%M:%S"
                               "-i"
                               "--grep")
@@ -102,8 +104,7 @@
     (let ((shortsha (truncate-string-to-width (cdr (assoc 'sha metadata)) 8))
           (datetime (cdr (assoc 'datetime metadata)))
           (author (cdr (assoc 'author metadata))))
-      (format "%s%s  %s  %s"
-              (make-string (- 76 (length cand)) (string-to-char " "))
+      (format " %s  %s  %s"
               (propertize shortsha 'face 'consult-git-log-grep-sha)
               (propertize datetime 'face 'consult-git-log-grep-datetime)
               (propertize author 'face 'consult-git-log-grep-author)))))
