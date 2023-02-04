@@ -85,18 +85,18 @@
   "Build the command using INPUT and supply the highlight function."
   (pcase-let ((`(,arg . ,opts) (consult--command-split input)))
     (unless (string-blank-p arg)
-      (list :command (append (list
-                              "git"
-                              "--no-pager"
-                              "log"
-                              ;; use git log's formattings padding/truncating for
-                              ;; better performance (less lisp string processing)
-                              "--pretty=format:%H@@@%<(76,mtrunc)%s@@@%aN@@@%ad"
-                              "--date=format:%Y-%m-%d %H:%M:%S"
-                              "-i"
-                              "--grep")
-                             (list arg) opts)
-            :highlight (cdr (consult--default-regexp-compiler input 'ignore-case t))))))
+      (cons (append (list
+                     "git"
+                     "--no-pager"
+                     "log"
+                     ;; use git log's formattings padding/truncating for
+                     ;; better performance (less lisp string processing)
+                     "--pretty=format:%H@@@%<(76,mtrunc)%s@@@%aN@@@%ad"
+                     "--date=format:%Y-%m-%d %H:%M:%S"
+                     "-i"
+                     "--grep")
+                    (list arg) opts)
+            (cdr (consult--default-regexp-compiler input 'ignore-case t))))))
 
 (defun consult-git-log-grep-result-annotator (cand)
   "Annotate the current candidate CAND using its text-properties."
