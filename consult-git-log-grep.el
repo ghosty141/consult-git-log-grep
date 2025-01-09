@@ -117,17 +117,18 @@
   (unless (locate-dominating-file default-directory ".git")
     (user-error "Not in a git repository"))
   (when-let ((result (consult--read
-                      (consult--async-command #'consult-git-log-grep--builder
-                        (consult--async-transform consult-git-log-grep--format)
-                        (consult--async-highlight #'consult-git-log-grep--builder))
+                      (consult--async-pipeline
+                       (consult--async-process #'consult-git-log-grep--builder)
+                       (consult--async-transform #'consult-git-log-grep--format)
+                       (consult--async-highlight #'consult-git-log-grep--builder))
                       :prompt "Commit Subject: "
                       :require-match t
                       :sort nil
                       :lookup #'consult--lookup-cdr
                       :category 'consult-git-log-grep-result
                       :annotate 'consult-git-log-grep-result-annotator
-                      :initial (consult--async-split-initial initial)
-                      :add-history (consult--async-split-thingatpt 'symbol)
+                      :initial initial
+                      :add-history (thing-at-point 'symbol)
                       :history '(:input consult-git-log-grep--history))))
     (funcall consult-git-log-grep-open-function (car result))))
 
