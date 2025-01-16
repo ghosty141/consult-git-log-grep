@@ -5,8 +5,8 @@
 ;; Author: Ghosty
 ;; Homepage: https://github.com/Ghosty141/consult-git-log-grep
 ;; Keywords: git convenience
-;; Version: 1.0.0
-;; Package-Requires: ((emacs "27.1") (consult "0.16"))
+;; Version: 1.2.0
+;; Package-Requires: ((emacs "28.1") (consult "1.9"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -61,25 +61,25 @@
          (buf (get-buffer-create (format "consult-git-log-grep-commit-%s" short-sha))))
     (shell-command (format "git --no-pager show %s" sha) buf)))
 
-(defun consult-git-log-grep--format (lines)
+(defun consult-git-log-grep--format (line)
   "Format git log grep candidates from LINES."
-  (let ((candidates))
-    (save-match-data
-      (dolist (str lines)
-        (when (string-match "\\([a-z0-9].*\\)@@@\\(.*\\)@@@\\(.*\\)@@@\\(.*\\)" str)
-          (let ((sha (match-string 1 str))
-                (msg (match-string 2 str))
-                (author (match-string 3 str))
-                (datetime (match-string 4 str)))
-            (put-text-property 0
-                               1
-                               'consult-log-grep--metadata
-                               `((sha . ,sha)
-                                 (author . ,author)
-                                 (datetime . ,datetime))
-                               msg)
-            (push (list msg sha) candidates)))))
-    (nreverse candidates)))
+  (let ((str (car line)))
+    (when (string-match "\\([a-z0-9].*\\)@@@\\(.*\\)@@@\\(.*\\)@@@\\(.*\\)" str)
+      (let* ((sha (match-string 1 str))
+             (suffix (match-string 1 str))
+             (msg (match-string 2 str))
+             (author (match-string 3 str))
+             (datetime (match-string 4 str)))
+        (put-text-property 0
+                           1
+                           'consult-log-grep--metadata
+                           `((sha . ,sha)
+                             (author . ,author)
+                             (datetime . ,datetime))
+                           msg)
+        (add-text-properties 0 (length suffix) '(invisible t consult-strip t) suffix)
+        (list (concat msg suffix))))))
+
 
 (defun consult-git-log-grep--builder (input)
   "Build the command using INPUT and supply the highlight function."
