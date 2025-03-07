@@ -78,7 +78,7 @@
                              (datetime . ,datetime))
                            msg)
         (add-text-properties 0 (length suffix) '(invisible t consult-strip t) suffix)
-        (list (concat msg suffix))))))
+        (list (cons (concat msg suffix) sha))))))
 
 
 (defun consult-git-log-grep--builder (input)
@@ -130,7 +130,7 @@
                       :initial initial
                       :add-history (thing-at-point 'symbol)
                       :history '(:input consult-git-log-grep--history))))
-    (funcall consult-git-log-grep-open-function (car result))))
+    (funcall consult-git-log-grep-open-function result)))
 
 (provide 'consult-git-log-grep)
 ;;; consult-git-log-grep.el ends here
