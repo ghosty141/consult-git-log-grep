@@ -5,7 +5,7 @@
 ;; Author: Ghosty
 ;; Homepage: https://github.com/Ghosty141/consult-git-log-grep
 ;; Keywords: git convenience
-;; Version: 1.2.0
+;; Version: 1.3.0
 ;; Package-Requires: ((emacs "28.1") (consult "1.9"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -37,6 +37,12 @@
   :package-version '(consult-git-log-grep . "1.0.0")
   :group 'consult-git-log-grep
   :type '(function :tag "Function"))
+
+(defcustom consult-git-log-grep-preview nil
+  "Whether to show a preview of the selected candidate"
+  :package-version '(consult-git-log-grep . "1.3.0")
+  :group 'consult-git-log-grep
+  :type 'boolean)
 
 (defface consult-git-log-grep-sha
   '((t :inherit font-lock-keyword-face))
@@ -128,8 +134,16 @@
                       :annotate 'consult-git-log-grep-result-annotator
                       :initial initial
                       :add-history (thing-at-point 'symbol)
-                      :history '(:input consult-git-log-grep--history))))
+                      :history '(:input consult-git-log-grep--history)
+                      :state #'consult-git-log-grep--preview
+                      )))
     (funcall consult-git-log-grep-open-function result)))
+
+(defun consult-git-log-grep--preview (action cand)
+  (and cand
+       consult-git-log-grep-preview
+       (eq action 'preview)
+       (funcall consult-git-log-grep-open-function cand)))
 
 (provide 'consult-git-log-grep)
 ;;; consult-git-log-grep.el ends here
